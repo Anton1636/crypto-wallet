@@ -1,95 +1,98 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+'use client'
+
+import { JsonRpcProvider, Wallet } from 'ethers'
+import { useEffect, useState } from 'react'
+import styles from './page.module.css'
+import { formatWeiToEth } from '../../utils'
+import blockchain from './blockchain.json'
+import Logo from './components/Logo.js'
+require('dotenv').config()
+
+const initialChain = blockchain.chains[0]
+const initialNativeAsset = blockchain.assets.find(
+	asset => asset === initialChain.nativeAssetId
+)
 
 export default function Home() {
-  return (
-    <main className={styles.main}>
-      <div className={styles.description}>
-        <p>
-          Get started by editing&nbsp;
-          <code className={styles.code}>src/app/page.js</code>
-        </p>
-        <div>
-          <a
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className={styles.vercelLogo}
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
-        </div>
-      </div>
+	const [provider, setProvider] = useState(undefined)
+	const [wallet, setWallet] = useState(undefined)
+	const [balance, setBalance] = useState(undefined)
+	const [loading, setLoading] = useState(true)
+	const { nativeAsset, setNativeAsset } = useState(initialNativeAsset)
 
-      <div className={styles.center}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
+	useEffect(() => {
+		const init = async () => {
+			try {
+				if (!wallet) {
+					const provider = new JsonRpcProvider(
+						process.env.NEXT_PUBLIC_LOCAL_RPC_URL
+					)
+					const wallet = Wallet.fromPhrase(
+						process.env.NEXT_PUBLIC_MNEMONIC,
+						provider
+					)
 
-      <div className={styles.grid}>
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Docs <span>-&gt;</span>
-          </h2>
-          <p>Find in-depth information about Next.js features and API.</p>
-        </a>
+					setProvider(provider)
+					setWallet(wallet)
+					setLoading(false)
+				}
+			} catch (error) {
+				console.error('Error initializing wallet:', error)
+				setLoading(false)
+			}
+		}
 
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Learn <span>-&gt;</span>
-          </h2>
-          <p>Learn about Next.js in an interactive course with&nbsp;quizzes!</p>
-        </a>
+		init()
+	}, [])
 
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Templates <span>-&gt;</span>
-          </h2>
-          <p>Explore starter templates for Next.js.</p>
-        </a>
+	useEffect(() => {
+		const init = async () => {
+			if (!loading && wallet) {
+				try {
+					const balance = await provider.getBalance(wallet.address)
+					if (balance === null || balance === undefined) {
+						console.error('Failed to retrieve balance')
+						setBalance(null)
+					} else {
+						setBalance(balance)
+					}
+				} catch (error) {
+					console.error('Error retrieving balance:', error)
+				}
+			}
+		}
 
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Deploy <span>-&gt;</span>
-          </h2>
-          <p>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
-  );
+		init()
+	}, [wallet, loading])
+
+	return (
+		<div className='container-fluid mt-5 d-flex justify-content-center'>
+			<div id='content' className='row'>
+				<div id='content-inner' className='col'>
+					<div className='text-center'>
+						<h1 id='title' className='fw-bold'>
+							CRYPTO WALLET
+						</h1>
+						<p id='sub-title' className='mt-4 fw-bold'>
+							Manage your crypto assets
+						</p>
+					</div>
+					{wallet ? (
+						<>
+							<div className={styles.overview}>
+								<p>
+									<Logo asset={nativeAsset} /> {nativeAsset.name}
+								</p>
+								<p className={styles.address}>{wallet.address}</p>
+								<p className={styles.balance}>{formatWeiToEth(balance)} ETH</p>
+							</div>
+							"wallet loaded"
+						</>
+					) : (
+						'Loading'
+					)}
+				</div>
+			</div>
+		</div>
+	)
 }

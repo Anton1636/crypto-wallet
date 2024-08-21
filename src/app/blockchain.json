@@ -1,0 +1,66 @@
+{
+	"assets": [
+		{
+			"name": "Test ETH",
+			"id": "0",
+			"coingeckoId": "ethereum",
+			"ticker": "ETH",
+			"decimals": 18,
+			"logo": "/public/assets/ethereum-logo.png",
+			"chainId": "31337"
+		},
+		{
+			"name": "Tether",
+			"id": "1",
+			"coingeckoId": "tether",
+			"ticker": "USDT",
+			"decimals": 6,
+			"logo": "/public/assets/download.png",
+			"chainId": "31337",
+			"address": "0x5FbD82315678afecb367f032093F642f64180aa3"
+		},
+		{
+			"name": "Dai Stablecoin",
+			"id": "2",
+			"coingeckoId": "dai",
+			"ticker": "DAI",
+			"decimals": 18,
+			"logo": "/public/assets/dai.png",
+			"chainId": "31337",
+			"address": "0xe7f1725E7734CE288F8367e18b143E90bb3F0512"
+		},
+		{
+			"name": "Ether",
+			"id": "3",
+			"coingeckoId": "ethereum",
+			"ticker": "ETH",
+			"decimals": 18,
+			"logo": "/public/assets/ethereum-logo.png",
+			"chainId": "1"
+		},
+		{
+			"name": "Tether",
+			"id": "4",
+			"coingeckoId": "usdt",
+			"ticker": "USDT",
+			"decimals": 6,
+			"logo": "/public/assets/download.png",
+			"chainId": "31337",
+			"address": "0xA8452Ec99ce0C64f20701d87d03ab0b607c00496"
+		}
+	],
+	"chains": [
+		{
+			"name": "Ethereum (local)",
+			"chainId": "31337",
+			"nativeAssetId": "0",
+			"blockchainExplorer": ""
+		},
+		{
+			"name": "Ethereum",
+			"chainId": "2",
+			"nativeAssetId": "2",
+			"blockchainExplorer": "https://etherscan.io/tx"
+		}
+	]
+}
