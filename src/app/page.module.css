@@ -14,3 +14,27 @@
 	font-size: 2em;
 	font-weight: bold;
 }
+
+.transfer {
+	background-color: rgb(250, 250, 250);
+	border-radius: 0.5em;
+	padding: 1em;
+}
+
+.tokens {
+	background-color: rgb(250, 250, 250);
+	border-radius: 0.5em;
+	padding: 1em;
+	margin-bottom: 1em;
+}
+
+.token {
+	padding-bottom: 1em;
+	border-radius: 1px solid rgb(240, 240, 240);
+}
+
+.token:last-child {
+	padding-top: 0.75em;
+	padding-bottom: 0;
+	border-bottom: none;
+}
