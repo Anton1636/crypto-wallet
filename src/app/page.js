@@ -105,7 +105,9 @@ export default function Home() {
 		let { name, value } = e.target
 		if (name === 'asset') {
 			const ticker = value
-			value = [nativeAsset].find(asset => asset.ticker === ticker)
+			value = [nativeAsset, ...tokenAssets].find(
+				asset => asset.ticker === ticker
+			)
 			value = value || { ticker }
 		}
 

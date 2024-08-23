@@ -2,6 +2,7 @@
 
 # dependencies
 /node_modules
+/blockchain/lib/openzeppelin-contracts
 /.pnp
 .pnp.js
 .yarn/install-state.gz

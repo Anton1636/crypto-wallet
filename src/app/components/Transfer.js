@@ -1,9 +1,10 @@
 'use client'
 import { useEffect, useState } from 'react'
 import styles from './transfer.module.css'
-import { parseUnits } from 'ethers'
+import { Contract, parseUnits } from 'ethers'
 import { formatWeiToEth } from '../../../utils'
 import Link from 'next/link'
+import blockchain from '../blockchain.json'
 
 export default function Transfer({
 	provider,
@@ -21,18 +22,36 @@ export default function Transfer({
 
 	useEffect(() => {
 		const init = async () => {
-			const txRequest = {
-				from: wallet.address,
-				to: transfer.to,
-				value: parseUnits(transfer.amount, transfer.asset.decimals),
+			let estimateGas
+
+			if (!transfer.asset.address) {
+				const txRequest = {
+					from: wallet.address,
+					to: transfer.to,
+					value: parseUnits(transfer.amount, transfer.asset.decimals),
+				}
+				estimateGas = wallet.estimateGas(txRequest)
+			} else {
+				const token = new Contract(
+					transfer.asset.address,
+					blockchain.abis.erc20,
+					wallet
+				)
+				estimateGas = token.transfer.estimateGas(
+					transfer.to,
+					parseUnits(transfer.amount, transfer.asset.decimals)
+				)
 			}
 
-			const gasCost = await wallet.estimateGas(txRequest)
-			const feeData = provider.getFeeData()
+			const [gasCost, feeData, ethPriceRaw] = await Promise.all([
+				estimateGas,
+				provider.getFeeData(),
+				fetch(
+					`https://api.coingecko.com/api/v3/simple/price?ids=${nativeAsset.coingekoId}&vs_currencies=usd&x_cg_pro_api_key=${process.env.NEXT_PUBLIC_COINGEKO_API_KEY}`
+				),
+			])
+
 			const txCostEth = BigInt(gasCost) * BigInt(feeData.maxFeePerGas)
-			const ethPriceRaw = await fetch(
-				`https://api.coingecko.com/api/v3/simple/price?ids=${nativeAsset.coingekoId}&vs_currencies=usd&x_cg_pro_api_key=${process.env.NEXT_PUBLIC_COINGEKO_API_KEY}`
-			)
 			const ethPrice = await ethPriceRaw.json()
 			const scaleFactor = 100
 			const adjustedEthPrice = parseInt(
@@ -40,6 +59,7 @@ export default function Transfer({
 			)
 			const txCostUSD =
 				(txCostEth * BigInt(adjustedEthPrice)) / BigInt(scaleFactor)
+
 			setTxCostEth(txCostEth)
 			setTxCostUSD(txCostUSD)
 		}
@@ -59,13 +79,30 @@ export default function Transfer({
 
 	const send = async () => {
 		try {
-			const txRequest = {
-				from: wallet.address,
-				to: transfer.to,
-				value: parseUnits(transfer.amount, transfer.asset.decimals),
+			let tx
+
+			if (!transfer.asset.address) {
+				const txRequest = {
+					from: wallet.address,
+					to: transfer.to,
+					value: parseUnits(transfer.amount, transfer.asset.decimals),
+				}
+				tx = wallet.sendTransaction(txRequest)
+			} else {
+				const token = new Contract(
+					transfer.asset.address,
+					blockchain.abis.erc20,
+					wallet
+				)
+				tx = token.transfer(
+					transfer.to,
+					parseUnits(transfer.amount, transfer.asset.decimals)
+				)
 			}
-			const txResponse = await wallet.sendTransaction(txRequest)
+
+			const txResponse = await tx
 			const txReceipt = await txResponse.wait()
+
 			if (parseInt(txReceipt.status !== 1))
 				throw new Error('Transaction failed')
 			setTxHash(txReceipt.hash)
@@ -117,6 +154,16 @@ export default function Transfer({
 						className='form-control mb-3'
 						name='amount'
 						value={transfer.amount}
+						disabled={true}
+					/>
+				</div>
+				<div className='form-group mb-3'>
+					<label>Asset</label>
+					<input
+						type='text'
+						className='form-control mb-3'
+						name='asset'
+						value={transfer.asset.ticker}
 						disabled={true}
 					/>
 				</div>
